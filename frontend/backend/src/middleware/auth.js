@@ -1,0 +1,30 @@
+const jwt = require('jsonwebtoken');
+
+const auth = (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'claynest_secret_key_2026');
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Invalid token' });
+  }
+};
+
+const authMiddleware = auth;
+
+const adminMiddleware = (req, res, next) => {
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
+  next();
+};
+
+module.exports = auth;
+module.exports.authMiddleware = authMiddleware;
+module.exports.adminMiddleware = adminMiddleware;
